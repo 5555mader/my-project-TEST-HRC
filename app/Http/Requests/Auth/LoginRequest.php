@@ -20,20 +20,19 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
+     * จุดที่ 1: Get the validation rules that apply to the request.
      */
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            // เปลี่ยนจาก 'email' => ['required', 'string', 'email'] เป็น 'name'
+            'name' => ['required', 'string'], 
             'password' => ['required', 'string'],
         ];
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
+     * จุดที่ 2: Attempt to authenticate the request's credentials.
      *
      * @throws \Illuminate\Validation\ValidationException
      */
@@ -41,11 +40,13 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        // เปลี่ยน Auth::attempt ให้ใช้ 'name' แทน 'email'
+        if (! Auth::attempt($this->only('name', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                // คืนค่า Error กลับไปที่ฟิลด์ 'name'
+                'name' => trans('auth.failed'),
             ]);
         }
 
@@ -68,7 +69,8 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+            // เปลี่ยนคีย์แจ้งเตือนการล็อคระบบชั่วคราวให้เป็น 'name' ด้วย
+            'name' => trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
@@ -76,10 +78,11 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Get the rate limiting throttle key for the request.
+     * จุดที่ 3: Get the rate limiting throttle key for the request.
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        // เปลี่ยนการล็อคจำนวนครั้งการเข้าสู่ระบบผิดพลาด ให้จำจาก 'name' แทน 'email'
+        return Str::transliterate(Str::lower($this->input('name')).'|'.$this->ip());
     }
 }

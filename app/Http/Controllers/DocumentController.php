@@ -138,6 +138,11 @@ class DocumentController extends Controller
      */
     public function storeMemo(Request $request)
     {
+        // 🌟 เพิ่มการตรวจสอบลายเซ็นตรงนี้ ก่อนเริ่มการบันทึกข้อมูล
+        if (empty(Auth::user()->signature)) {
+            return back()->with('error', 'บัญชีของท่านต้องมีลายเซ็นก่อนจึงจะสามารถขออนุมัติเอกสารภายในได้');
+        }
+
         // 1. ตรวจสอบความถูกต้องของข้อมูลเบื้องต้น
         $request->validate([
             'department' => 'required',
@@ -318,6 +323,11 @@ class DocumentController extends Controller
 
     public function storeArchive(Request $request)
     {
+        // 🌟 เพิ่มการตรวจสอบลายเซ็นตรงนี้ ก่อนเริ่มการบันทึกข้อมูล
+        if (empty(Auth::user()->signature)) {
+            return back()->with('error', 'บัญชีของท่านต้องมีลายเซ็นก่อนจึงจะสามารถขออนุมัติเอกสารภายในได้');
+        }
+
         $request->validate([
             'title' => 'required|string|max:255',
             'doc_number' => 'required|string',
@@ -385,6 +395,12 @@ class DocumentController extends Controller
 
         // === สำหรับสร้าง "บันทึกข้อความภายใน" รองรับแนบหลายไฟล์ (Attachments) ===
         if ($request->category == 'บันทึกข้อความภายใน' || $request->has('approver_id')) {
+            
+            // 🌟 เพิ่มการตรวจสอบลายเซ็นตรงนี้ ก่อนเริ่มการบันทึกข้อมูล (เช็คเฉพาะบันทึกข้อความภายใน)
+            if (empty(Auth::user()->signature)) {
+                return back()->with('error', 'บัญชีของท่านต้องมีลายเซ็นก่อนจึงจะสามารถขออนุมัติเอกสารภายในได้');
+            }
+
             $request->validate([
                 'doc_number'  => 'required|unique:documents,doc_number',
                 'title'       => 'required|string|max:255',

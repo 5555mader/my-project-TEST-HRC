@@ -20,6 +20,9 @@
 
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    
+    {{-- นำเข้า SweetAlert2 สำหรับแจ้งเตือนลายเซ็น --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         body,
@@ -529,6 +532,33 @@
             });
 
             $('form').on('submit', function(e) {
+                // 🌟 1. ระบบตรวจสอบลายเซ็นก่อนส่งฟอร์ม 🌟
+                // ดึงค่าว่า User ปัจจุบันมีข้อมูลในช่อง signature หรือไม่
+                var hasSignature = {{ Auth::user()->signature ? 'true' : 'false' }};
+                
+                if (!hasSignature) {
+                    e.preventDefault(); // สั่งหยุดการส่งฟอร์มทันที
+                    
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'ไม่สามารถขออนุมัติเอกสารได้',
+                        text: 'บัญชีของท่านต้องมีลายเซ็นก่อนจึงจะสามารถขออนุมัติเอกสารภายในได้ กรุณาอัปเดตลายเซ็นของท่าน',
+                        showCancelButton: true,
+                        confirmButtonText: 'ไปหน้าตั้งค่าลายเซ็น',
+                        cancelButtonText: 'ปิดหน้าต่าง',
+                        confirmButtonColor: '#0d6efd',
+                        cancelButtonColor: '#6c757d'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // หากกดปุ่มยืนยัน ให้พาไปที่หน้า Profile เพื่ออัปโหลดลายเซ็น (อิงจาก web.php)
+                            window.location.href = "{{ route('profile.edit') }}"; 
+                        }
+                    });
+                    
+                    return false; // จบการทำงานฟังก์ชันนี้
+                }
+
+                // 2. โค้ดตรวจสอบข้อมูลเดิมของคุณ (นำมาต่อไว้ด้านล่างการเช็คลายเซ็นได้เลย)
                 var selectedTitle = $('#title_select').val();
                 if (selectedTitle === 'อื่นๆ') {
                     var customText = $('#custom_title_input').val().trim();
