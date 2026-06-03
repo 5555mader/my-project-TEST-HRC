@@ -142,8 +142,15 @@
                                         {{ $emp->phone ?? '-' }}</div>
                                 </td>
                                 <td>
-                                    <span
-                                        class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 mb-1">{{ $emp->department ?? 'ไม่ระบุแผนก' }}</span>
+                                    {{-- แสดงชื่อแผนก (โค้ดเดิม) --}}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 mb-1">
+                                        {{ $emp->department ?? 'ไม่ระบุแผนก' }}
+                                    </span>
+
+                                    {{-- แสดงชื่อตำแหน่ง (เพิ่มใหม่) --}}
+                                    <div class="small text-muted mt-1">
+                                        <i class="bi bi-person-badge me-1"></i> {{ $emp->position ?? 'ไม่ระบุตำแหน่ง' }}
+                                    </div>
                                 </td>
                                 <td>
                                     <span class="small"><i class="bi bi-geo-alt text-danger me-1"></i>
@@ -171,13 +178,14 @@
                                             data-bs-target="#editEmployeeModal" data-id="{{ $emp->id }}"
                                             data-name="{{ $emp->name }}" data-email="{{ $emp->email }}"
                                             data-department="{{ $emp->department }}" data-branch="{{ $emp->branch }}"
-                                            data-role="{{ $emp->role }}" title="แก้ไขข้อมูล">
+                                            data-role="{{ $emp->role }}" data-position="{{ $emp->position }}"
+                                            title="แก้ไขข้อมูล">
                                             <i class="bi bi-pencil-square text-warning"></i>
                                         </button>
 
                                         @if ($emp->id !== Auth::id())
-                                            <form action="{{ route('admin.employees.destroy', $emp->id) }}" method="POST"
-                                                class="d-inline ms-1"
+                                            <form action="{{ route('admin.employees.destroy', $emp->id) }}"
+                                                method="POST" class="d-inline ms-1"
                                                 onsubmit="return confirm('ยืนยันการลบพนักงาน {{ $emp->name }} ออกจากระบบ?');">
                                                 @csrf
                                                 @method('DELETE')
@@ -236,6 +244,23 @@
                                     @endforeach
                                 </select>
                             </div>
+
+                            {{-- ส่วนที่เพิ่มใหม่สำหรับ: ตำแหน่ง (ในหน้า Edit Modal) --}}
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">ตำแหน่ง (Position)</label>
+                                <select name="position" id="edit_position" class="form-select" required>
+                                    <option value="">-- เลือกตำแหน่ง --</option>
+                                    <option value="ประธานกรรมการบริษัท">ประธานกรรมการบริษัท</option>
+                                    <option value="กรรมการบริหาร">กรรมการบริหาร</option>
+                                    <option value="ผู้อำนวยการกลุ่มงาน">ผู้อำนวยการกลุ่มงาน</option>
+                                    <option value="ผู้จัดการกลุ่มงาน">ผู้จัดการกลุ่มงาน</option>
+                                    <option value="รองผู้จัดการกลุ่มงาน">รองผู้จัดการกลุ่มงาน</option>
+                                    <option value="หัวหน้าฝ่าย">หัวหน้าฝ่าย</option>
+                                    <option value="เจ้าหน้าที่อาวุโส">เจ้าหน้าที่อาวุโส</option>
+                                    <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
+                                </select>
+                            </div>
+
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">สาขา (Branch) <span
                                         class="text-danger">*</span></label>
@@ -247,8 +272,8 @@
                                 </select>
                             </div>
 
-                            {{-- ช่อง Select เลือกระดับสิทธิ์แบบ Single Modal (ปรับปรุงตามชุดข้อมูลใหม่) --}}
-                            <div class="col-md-12">
+                            {{-- ช่อง Select เลือกระดับสิทธิ์แบบ Single Modal --}}
+                            <div class="col-md-6">
                                 <label class="form-label small fw-bold">ระดับสิทธิ์ (Role) <span
                                         class="text-danger">*</span></label>
                                 <select id="edit_role" name="role" class="form-select" required>
@@ -519,6 +544,23 @@
                                 @endforeach
                             </select>
                         </div>
+
+                        {{-- ส่วนที่เพิ่มใหม่สำหรับ: ตำแหน่ง (ในหน้า Add Modal) --}}
+                        <div class="mb-3">
+                            <label for="position" class="form-label small fw-bold">ตำแหน่ง</label>
+                            <select name="position" id="position" class="form-select" required>
+                                <option value="" selected disabled>-- เลือกตำแหน่ง --</option>
+                                <option value="ประธานกรรมการบริษัท">ประธานกรรมการบริษัท</option>
+                                <option value="กรรมการบริหาร">กรรมการบริหาร</option>
+                                <option value="ผู้อำนวยการกลุ่มงาน">ผู้อำนวยการกลุ่มงาน</option>
+                                <option value="ผู้จัดการกลุ่มงาน">ผู้จัดการกลุ่มงาน</option>
+                                <option value="รองผู้จัดการกลุ่มงาน">รองผู้จัดการกลุ่มงาน</option>
+                                <option value="หัวหน้าฝ่าย">หัวหน้าฝ่าย</option>
+                                <option value="เจ้าหน้าที่อาวุโส">เจ้าหน้าที่อาวุโส</option>
+                                <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
+                            </select>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label small fw-bold">สาขา</label>
                             <select name="branch" class="form-select" required>
@@ -528,7 +570,6 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            {{-- ส่วนนี้คือเป้าหมายที่ถูกเปลี่ยนใหม่ทั้งหมด --}}
                             <label class="form-label small fw-bold">ระดับสิทธิ์ (Role)</label>
                             <select name="role" class="form-select" required>
                                 <option value="Employee">พนักงานทั่วไป (Employee)</option>
@@ -564,6 +605,7 @@
                     const department = button.getAttribute('data-department');
                     const branch = button.getAttribute('data-branch');
                     const role = button.getAttribute('data-role');
+                    const position = button.getAttribute('data-position'); // 🌟 เพิ่มบรรทัดนี้
 
                     // เปลี่ยนเป้าหมายการ Submit Form
                     document.getElementById('editEmployeeForm').action = `/admin/employees/${id}`;
@@ -575,6 +617,10 @@
 
                     const deptSelect = document.getElementById('edit_department');
                     if (deptSelect) deptSelect.value = department;
+
+                    // 🌟 เพิ่มบล็อกนี้ สำหรับจับคู่ Select ตำแหน่ง 🌟
+                    const positionSelect = document.getElementById('edit_position');
+                    if (positionSelect) positionSelect.value = position || '';
 
                     const branchSelect = document.getElementById('edit_branch');
                     if (branchSelect) branchSelect.value = branch;

@@ -191,7 +191,6 @@
                 <thead class="table-light small text-muted text-uppercase">
                     <tr>
                         <th class="ps-4">เลขที่ / เรื่อง</th>
-                        {{-- 🌟 จุดที่ 1: เพิ่มคอลัมน์วันที่สร้าง 🌟 --}}
                         <th>วันที่สร้าง</th>
                         <th>ผู้ส่งเอกสาร</th>
                         <th>เรียน (ส่งถึง)</th>
@@ -206,7 +205,6 @@
                                 <span class="d-block text-muted small fw-mono">{{ $doc->doc_number }}</span>
                                 <span class="fw-bold text-dark">{{ $doc->title }}</span>
                             </td>
-                            {{-- 🌟 จุดที่ 1: แสดงข้อมูลวันที่พร้อมเวลา 🌟 --}}
                             <td class="text-muted small">
                                 {{ \Carbon\Carbon::parse($doc->created_at)->locale('th')->addYears(543)->translatedFormat('j F Y เวลา H:i น.') }}
                             </td>
@@ -273,7 +271,7 @@
                                 @endphp
 
                                 <div class="d-flex flex-column justify-content-center gap-2 my-2">
-                                    {{-- 🌟 จุดที่ 2: อัปเดต data-date ปุ่มพิมพ์ / A4 🌟 --}}
+                                    {{-- เพิ่มการส่งค่า data-approver2-id ไปให้ JS ตรวจสอบ --}}
                                     <button type="button" class="btn btn-sm btn-outline-primary rounded w-100"
                                         data-bs-toggle="modal" data-bs-target="#viewDocModal"
                                         data-title="{{ $doc->title }}" data-number="{{ $doc->doc_number }}"
@@ -288,6 +286,7 @@
                                         data-approver1-sig="{{ $doc->approver->signature ?? '' }}"
                                         data-approver2-name="{{ $doc->approver2->name ?? '-' }}"
                                         data-approver2-sig="{{ $doc->approver2->signature ?? '' }}"
+                                        data-approver2-id="{{ $doc->approver_2_id ?? '' }}"
                                         data-status="{{ $doc->status }}">
                                         <i class="bi bi-file-earmark-pdf"></i> พิมพ์ / A4
                                     </button>
@@ -309,7 +308,6 @@
                                         @endif
                                     @endif
 
-                                    {{-- 🌟 จุดที่ 2: อัปเดต data-date ปุ่มรายละเอียด 🌟 --}}
                                     <button type="button" class="btn btn-sm btn-outline-info rounded w-100"
                                         data-bs-toggle="modal" data-bs-target="#detailDocModal"
                                         data-title="{{ $doc->title }}" data-number="{{ $doc->doc_number }}"
@@ -522,28 +520,29 @@
                             </div>
                         </div>
 
-                        {{-- เนื้อหาเอกสาร --}}
-                        <div id="modal-a4-content" class="my-4 text-dark"
-                            style="font-size: 16px; line-height: 1.8; white-space: pre-wrap; min-height: 120mm;"></div>
+                        {{-- เนื้อหาเอกสาร เพิ่ม class text-justify เข้าไปและถอด whitespace ออก --}}
+                        <div id="modal-a4-content" class="my-4 text-dark text-justify"
+                            style="font-size: 16px; line-height: 1.8; min-height: 120mm;"></div>
 
-                        {{-- โซนลายเซ็นล็อกตำแหน่งด้านล่างสุดของ A4 --}}
+                        {{-- โซนลายเซ็นล็อกตำแหน่งด้านล่างสุดของ A4 (เพิ่ม ID ให้กับกล่องเพื่อใช้สคริปต์ควบคุมการซ่อน-แสดง) --}}
                         <div class="position-absolute w-100 row text-center small text-dark"
                             style="bottom: 20mm; left: 0; padding: 0 15mm; margin: 0;">
-                            <div class="col-4 px-2">
+
+                            <div class="col-4 px-2" id="preview-sender-box">
                                 <div id="sig-sender-container" style="height: 60px;"
                                     class="d-flex align-items-end justify-content-center mb-1"></div>
                                 <p class="mb-0 fw-bold">( <span id="modal-sig-sender"></span> )</p>
                                 <p class="text-muted small mt-1">วันที่ <span class="modal-sig-date"></span></p>
                             </div>
 
-                            <div class="col-4 px-2">
+                            <div class="col-4 px-2" id="preview-approver1-box">
                                 <div id="sig-approver1-container" style="height: 60px;"
                                     class="d-flex align-items-end justify-content-center mb-1"></div>
                                 <p class="mb-0 fw-bold">( <span id="modal-sig-approver1"></span> )</p>
                                 <p class="text-muted small mt-1">วันที่ <span class="modal-sig-date"></span></p>
                             </div>
 
-                            <div class="col-4 px-2">
+                            <div class="col-4 px-2" id="preview-approver2-box">
                                 <div id="sig-approver2-container" style="height: 60px;"
                                     class="d-flex align-items-end justify-content-center mb-1"></div>
                                 <p class="mb-0 fw-bold">( <span id="modal-sig-approver2"></span> )</p>
@@ -793,8 +792,11 @@
 
                     viewDocModal.querySelector('#modal-a4-title').textContent = button.getAttribute(
                         'data-title');
+
+                    // กำหนดค่า HTML โดยตรงเพื่อให้ Quill แสดงผล Bold / Underline ได้ถูกต้อง
                     viewDocModal.querySelector('#modal-a4-content').innerHTML = button.getAttribute(
                         'data-content');
+
                     viewDocModal.querySelector('#modal-a4-number').textContent = button.getAttribute(
                         'data-number');
                     viewDocModal.querySelector('#modal-a4-dept').textContent = button.getAttribute(
@@ -854,6 +856,30 @@
                         }
                     };
 
+                    // ประมวลผลและแสดง/ซ่อนกล่องของผู้อนุมัติที่ 2 ตามเงื่อนไข
+                    const approver2Id = button.getAttribute('data-approver2-id');
+                    const approver2Box = document.getElementById('preview-approver2-box');
+                    const senderBox = document.getElementById('preview-sender-box');
+                    const approver1Box = document.getElementById('preview-approver1-box');
+
+                    if (!approver2Id || approver2Id === "") {
+                        approver2Box.style.display = 'none'; // ซ่อนกล่องที่ 2
+                        // ปรับขยายขนาดกล่องที่เหลือให้กระจายแบบ 50%
+                        senderBox.className = 'col-6 px-2 text-center';
+                        approver1Box.className = 'col-6 px-2 text-center';
+                    } else {
+                        approver2Box.style.display = 'block'; // แสดงผลตามปกติถ้ามี
+                        // กลับไปใช้คอลัมน์ขนาด 33% ตามเดิม
+                        senderBox.className = 'col-4 px-2 text-center';
+                        approver1Box.className = 'col-4 px-2 text-center';
+                        approver2Box.className = 'col-4 px-2 text-center';
+
+                        // เรียกเรนเดอร์ลายเซ็นผู้อนุมัติคนที่ 2
+                        renderSignature('sig-approver2-container', app2Sig,
+                            'ลงชื่อ..............................................ผู้อนุมัติ (2)', (
+                                status === 'approved'));
+                    }
+
                     renderSignature('sig-sender-container', senderSig,
                         'ลงชื่อ..............................................ผู้ขออนุมัติ', true);
 
@@ -861,16 +887,6 @@
                     renderSignature('sig-approver1-container', app1Sig,
                         'ลงชื่อ..............................................ผู้อนุมัติ (1)',
                         app1Approved);
-
-                    if (app2Name && app2Name !== '-') {
-                        renderSignature('sig-approver2-container', app2Sig,
-                            'ลงชื่อ..............................................ผู้อนุมัติ (2)', (
-                                status === 'approved'));
-                    } else {
-                        viewDocModal.querySelector('#sig-approver2-container').innerHTML =
-                            `<span class="text-muted">ไม่ต้องมีผู้อนุมัติคนที่ 2</span>`;
-                        viewDocModal.querySelector('#modal-sig-approver2').textContent = '-';
-                    }
 
                     const filesData = button.getAttribute('data-files');
                     const fileContainer = document.getElementById('file-attachments-container');

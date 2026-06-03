@@ -351,8 +351,6 @@
                         <div class="px-3 text-center">
                             <a href="{{ route('login') }}"
                                 class="btn btn-accent btn-sm w-75 mb-2 rounded-pill shadow-sm">Login</a>
-                            <a href="{{ route('register') }}"
-                                class="btn btn-outline-light btn-sm w-75 mb-2 rounded-pill shadow-sm">Register</a>
                         </div>
                     @endauth
                 </div>

@@ -17,18 +17,59 @@ class DocumentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Document::where('category', '!=', 'บันทึกข้อความภายใน')->latest();
+        $user = Auth::user();
+        
+        // 1. ดึงเอกสารส่วนกลาง / ฟอร์มดาวน์โหลดทั่วไป (ที่ไม่ใช่บันทึกข้อความภายใน)
+        $publicQuery = Document::where('category', '!=', 'บันทึกข้อความภายใน');
         
         if ($request->has('category') && $request->category != '') {
-            $query->where('category', $request->category);
+            $publicQuery->where('category', $request->category);
         }
 
         if ($request->has('search') && $request->search != '') {
-            $query->where('title', 'like', '%' . $request->search . '%');
+            $publicQuery->where('title', 'like', '%' . $request->search . '%');
+        }
+        $documents = $publicQuery->latest()->get();
+
+        // สำหรับเมนูตัวกรองหมวดหมู่เอกสารส่วนกลางด้านซ้าย
+        $categories = Document::where('category', '!=', 'บันทึกข้อความภายใน')
+            ->pluck('category')
+            ->unique();
+
+        // 2. ดึงเอกสารบันทึกข้อความภายใน (ดึงระบบของหน้า Archives เดิมมารวมไว้ในนี้)
+        $memoQuery = Document::where('category', 'บันทึกข้อความภายใน')->with(['user', 'approver', 'approver2', 'files']);
+        
+        // ตรวจสอบสิทธิ์: ถ้าไม่ใช่กลุ่มผู้บริหาร/Admin ให้เห็นเฉพาะเอกสารที่ตัวเองสร้าง
+        if (!in_array($user->role, ['Super Admin', 'HR Manager', 'CEO', 'Director'])) {
+            $memoQuery->where('user_id', $user->id);
         }
 
-        $documents = $query->get();
-        return view('admin.documents', compact('documents'));
+        if ($request->has('search') && $request->search != '') {
+            $memoQuery->where(function($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%')
+                  ->orWhere('doc_number', 'like', '%' . $request->search . '%');
+            });
+        }
+        $allMemos = $memoQuery->latest()->get();
+
+        // เตรียมโครงสร้างอาเรย์สำหรับแบ่งกลุ่มเรื่องที่ขออนุมัติ
+        $groupedMemos = [
+            'จัดซื้อ / เบิกจ่าย / การเงิน' => [],
+            'นิติการ / สัญญา' => [],
+            'บุคคล / ธุรการ / สถานที่' => [],
+            'ไอที / พัฒนาระบบ' => [],
+            'ขออนุมัติจัดทำโครงการ' => [],
+            'ตรวจสอบภายใน (Internal Audit)' => [],
+            'หนังสือแจ้ง / อื่นๆ' => []
+        ];
+
+        // วนลูปจัดกลุ่มโดยอาศัย Accessor sub_category_group ที่เพิ่มไว้ใน Model
+        foreach ($allMemos as $memo) {
+            $group = $memo->sub_category_group;
+            $groupedMemos[$group][] = $memo;
+        }
+
+        return view('documents', compact('documents', 'categories', 'groupedMemos'));
     }
 
     /**

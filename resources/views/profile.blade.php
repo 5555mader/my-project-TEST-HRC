@@ -6,11 +6,35 @@
     {{-- นำเข้า Google Fonts: Sarabun --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+        rel="stylesheet">
 
     <style>
         /* บังคับให้หน้าจอ, ตาราง, ฟอร์มกรอกข้อมูล และการ์ดต่างๆ ใช้ฟอนต์ Sarabun ทั้งหมด */
-        body, html, table, thead, tbody, tr, th, td, input, select, textarea, button, p, span, div, h1, h2, h3, h4, h5, h6, .card, .modal-content {
+        body,
+        html,
+        table,
+        thead,
+        tbody,
+        tr,
+        th,
+        td,
+        input,
+        select,
+        textarea,
+        button,
+        p,
+        span,
+        div,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .card,
+        .modal-content {
             font-family: 'Sarabun', sans-serif !important;
         }
     </style>
@@ -34,8 +58,20 @@
                     </div>
                     <h5 class="fw-bold mb-0">{{ Auth::user()->name }}</h5>
                     <p class="text-muted small">รหัสพนักงาน: EMP{{ str_pad(Auth::user()->id, 3, '0', STR_PAD_LEFT) }}</p>
-                    <div class="badge bg-primary bg-opacity-10 text-primary px-3 rounded-pill">
-                        {{ Auth::user()->department ?? 'ไม่ได้ระบุแผนก' }}</div>
+
+                    {{-- แก้ไขส่วนแสดงแผนกและเพิ่ม Role --}}
+                    <div class="d-flex flex-column align-items-center gap-1 mt-2">
+                        {{-- ป้ายชื่อแผนก (สีเดิม) --}}
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 rounded-pill w-auto">
+                            {{ Auth::user()->department ?? 'ไม่ได้ระบุแผนก' }}
+                        </span>
+
+                        {{-- ป้ายชื่อบทบาท Role (เพิ่มใหม่) --}}
+                        <span class="badge bg-secondary px-3 rounded-pill w-auto">
+                            บทบาท: {{ Auth::user()->role ?? 'พนักงานทั่วไป' }}
+                        </span>
+                    </div>
+
                 </div>
 
                 <div class="card border-0 shadow-sm p-3">
@@ -139,17 +175,19 @@
                                     <label class="form-label fw-bold small text-primary">
                                         <i class="bi bi-pen me-1"></i> ลายเซ็นอิเล็กทรอนิกส์ (สำหรับประทับลงในเอกสาร)
                                     </label>
-                                    
+
                                     {{-- แสดงรูปลายเซ็นเดิม (ถ้ามี) --}}
                                     @if (Auth::user()->signature && file_exists(public_path('uploads/signatures/' . Auth::user()->signature)))
                                         <div class="mb-3 p-3 bg-light border border-dashed rounded text-center">
-                                            <img src="{{ asset('uploads/signatures/' . Auth::user()->signature) }}" 
-                                                 alt="Signature" class="img-fluid" style="max-height: 80px;">
+                                            <img src="{{ asset('uploads/signatures/' . Auth::user()->signature) }}"
+                                                alt="Signature" class="img-fluid" style="max-height: 80px;">
                                         </div>
                                     @endif
-                                    
-                                    <input type="file" name="signature" class="form-control" accept="image/png, image/jpeg, image/jpg">
-                                    <small class="text-muted">* แนะนำให้ใช้ภาพพื้นหลังโปร่งใส (.png) เพื่อความสวยงามเมื่อวางทาบลงบนหน้าเอกสาร</small>
+
+                                    <input type="file" name="signature" class="form-control"
+                                        accept="image/png, image/jpeg, image/jpg">
+                                    <small class="text-muted">* แนะนำให้ใช้ภาพพื้นหลังโปร่งใส (.png)
+                                        เพื่อความสวยงามเมื่อวางทาบลงบนหน้าเอกสาร</small>
                                 </div>
                                 {{-- 🌟 🌟 สิ้นสุดโซนลายเซ็น 🌟 🌟 --}}
 

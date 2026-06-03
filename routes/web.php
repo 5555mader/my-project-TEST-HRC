@@ -30,12 +30,16 @@ use App\Models\Document;
 */
 
 // หน้าแรกและระบบโต้ตอบ (Public)
-Route::get('/', [AnnouncementController::class, 'index'])->name('welcome');
+// บังคับหน้าแรกให้วิ่งไปที่หน้า Login ทันที
+Route::redirect('/', '/login');
 Route::post('/post/{id}/like', [AnnouncementController::class, 'like'])->name('posts.like');
 Route::post('/post/{id}/comment', [AnnouncementController::class, 'comment'])->name('posts.comment');
 
 // บังคับ Login สำหรับระบบภายในทั้งหมด
 Route::middleware(['auth'])->group(function () {
+
+    // หน้าประกาศข่าวสาร (ย้ายเข้ามาไว้ในนี้และเปลี่ยน URL เป็น /home)
+    Route::get('/home', [AnnouncementController::class, 'index'])->name('welcome');
     
     // 1. Dashboard พื้นฐาน (แก้ไขเพิ่มระบบคำนวณวันลาพักร้อนแล้ว)
     Route::get('/dashboard', function () {
@@ -392,7 +396,7 @@ Route::middleware(['auth'])->group(function () {
         // 🆕 เพิ่ม Route สำหรับปุ่มลบเอกสารบันทึกข้อความภายใน
         Route::delete('/archives/memo/{id}', [DocumentController::class, 'destroy'])->name('admin.memos.destroy');
         // 🆕 เพิ่ม Route สำหรับอัปเดต(แก้ไข) บันทึกข้อความภายใน
-    Route::put('/archives/memo/{id}', [DocumentController::class, 'updateMemo'])->name('admin.memos.update');
+        Route::put('/archives/memo/{id}', [DocumentController::class, 'updateMemo'])->name('admin.memos.update');
 
         Route::get('/announcements/create', [AnnouncementController::class, 'create'])->name('admin.announcements.create');
         Route::post('/announcements/store', [AnnouncementController::class, 'store'])->name('admin.announcements.store');
